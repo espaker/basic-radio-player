@@ -57,8 +57,8 @@ function App() {
   }, [audio]);
 
   return (
-    <Layout>
-      <Flex vertical style={{width: "100%", height: "100%"}}>
+    <Layout >
+      <Flex vertical className='flexbody'>
         <Flex gap={5}>
           <Button 
             icon={(playing) ? <PauseCircleFilled /> : <PlayCircleOutlined />} 
