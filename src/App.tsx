@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { Button, Flex, Layout, Select, Slider } from 'antd';
+import { Button, Card, Flex, Layout, Menu, Slider, Typography } from 'antd';
 
 import { radios } from './data/radios';
 
 import './App.css';
-import { MutedOutlined, PauseCircleFilled, PlayCircleOutlined, SoundOutlined } from '@ant-design/icons';
+import { MutedOutlined, PauseCircleOutlined, PlayCircleOutlined, SoundOutlined } from '@ant-design/icons';
 
 function App() {
   const [curURL, setCurURL] = useState(localStorage.getItem('lastRadio') || radios[0].value);
@@ -58,34 +58,51 @@ function App() {
 
   return (
     <Layout >
-      <Flex vertical className='flexbody'>
-        <Flex gap={5}>
-          <Button 
-            icon={(playing) ? <PauseCircleFilled /> : <PlayCircleOutlined />} 
-            onClick={handlePlayPause} 
-            loading={loading} 
-          />
-          <Select 
-            placeholder='Selecione uma estação'
-            showSearch
-            optionFilterProp='label'
-            style={{width: '80vw'}} 
-            value={curURL} 
-            onChange={(e) => setCurURL(e)} 
-            options={radios}
-          />
-          <Button 
-            icon={volume && !muted ? <SoundOutlined /> : <MutedOutlined />}
-            onClick={handleMute} 
-          />
-          <Slider 
-            style={{width: '15vw'}} 
-            min={0} max={100}  
-            value={volume} 
-            onChange={setVolume} 
-          />
+      <Card 
+        title={
+          <Flex justify='center'>
+            <Typography.Title level={4}>Simple Radio Player</Typography.Title>
+          </Flex>
+        } 
+        style={{minWidth: '100vw', minHeight: '100vh'}}
+      >
+        <Flex vertical className='flexbody'>
+          <Flex justify='center'>
+            <Button 
+              icon={(playing) ? <PauseCircleOutlined style={{ fontSize: '400%'}} /> : <PlayCircleOutlined style={{ fontSize: '400%'}} />} 
+              onClick={handlePlayPause} 
+              danger={playing}
+              loading={loading} 
+              shape='circle'
+              type='text'
+              size='large'
+              style={{minHeight: '70px', minWidth: '70px'}}
+            />
+          </Flex>
+          <Flex gap={5} justify='center'>
+            <Button 
+              icon={volume && !muted ? <SoundOutlined /> : <MutedOutlined />}
+              onClick={handleMute} 
+              danger={muted}
+            />
+            <Slider 
+              style={{width: '70vw'}} 
+              min={0} max={100}  
+              value={volume} 
+              onChange={setVolume} 
+            />
+          </Flex>
+          <Flex vertical>
+            <Menu
+                onClick={({key}) => setCurURL(key)}
+                mode='inline' 
+                selectedKeys={[curURL]}
+                items={radios.map((radio) => ({label: radio.label, key: radio.value}))}
+                style={{overflowY: 'auto', maxHeight: '70vh'}}
+            />
+          </Flex>
         </Flex>
-      </Flex>
+      </Card>
     </Layout>
   );
 }
