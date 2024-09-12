@@ -35,6 +35,10 @@ export const radios = [
       label: 'Rockabilly-radio.net',
       value: 'http://lin3.ash.fast-serv.com:6026/stream_96',
     },
+    {
+      label: 'Magia FM',
+      value: 'https://ice.fabricahost.com.br/magiafm',
+    },
     // create multiple radios here to test the app
   //   { label: 'Radio Fictícia 1', value: 'http://fakeurl.com/stream1' },
   // { label: 'Radio Fictícia 2', value: 'http://fakeurl.com/stream2' },
