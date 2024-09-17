@@ -5,7 +5,7 @@ export const radios = [
     },
     {
       label: 'Old Time Radio',
-      value: 'http://icecast.walmradio.com:8000/otr_opus',
+      value: 'https://icecast.walmradio.com:8443/otr_opus',
     },
     {
       label: 'Galegóviski',
