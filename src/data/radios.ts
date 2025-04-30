@@ -1,5 +1,9 @@
 export const radios = [
     {
+        label: 'Antena1',
+        value: 'https://antenaone.crossradio.com.br/stream/2;?type=mpeg'
+    },
+    {
       label: 'Classic Vinyl HD',
       value: 'https://icecast.walmradio.com:8443/classic',
     },
