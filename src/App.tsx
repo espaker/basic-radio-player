@@ -77,6 +77,7 @@ function App() {
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const audioCtxRef  = useRef<AudioContext | null>(null);
   const analyserNodeRef = useRef<AnalyserNode | null>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   // ── Carrega lista inicial ────────────────────────────────────────────────
   useEffect(() => {
@@ -281,13 +282,15 @@ function App() {
       else playerRef.current.pause();
     };
 
+    const sliderEl = sliderRef.current;
+
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('wheel', onWheel, { passive: true });
+    sliderEl?.addEventListener('wheel', onWheel, { passive: true });
     window.addEventListener('plasma-middle-click', onMiddleClick);
 
     return () => {
       window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('wheel', onWheel);
+      sliderEl?.removeEventListener('wheel', onWheel);
       window.removeEventListener('plasma-middle-click', onMiddleClick);
     };
   }, []);
@@ -369,7 +372,7 @@ function App() {
           </Flex>
 
           {/* Volume */}
-          <Flex gap={8} justify='center' align='center'>
+          <Flex ref={sliderRef} gap={8} justify='center' align='center'>
             <Button
               icon={volume && !muted ? <SoundOutlined /> : <MutedOutlined />}
               onClick={handleMute}
