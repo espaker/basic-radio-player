@@ -231,16 +231,16 @@ function App() {
 
       setPlaying(true);
       // ⚠️ PLASMA WIDGET — NÃO REMOVER
-      // O QML lê mensagens do console via onJavaScriptConsoleMessage (WebEngineView).
-      // O prefixo "__RADIO_PLAYING__:" é o contrato entre o JS e o QML para
-      // atualizar a cor/ícone do widget no painel do Plasma 6.
-      console.log('__RADIO_PLAYING__:true');
+      // SES (Secure EcmaScript/Lockdown) bloqueia console.log customizado.
+      // O QML lê window.__radioPlaying via runJavaScript() para atualizar
+      // a cor/ícone do widget no painel do Plasma 6.
+      (window as any).__radioPlaying = true;
     });
 
     audio.addEventListener('pause', () => {
       setPlaying(false);
       // ⚠️ PLASMA WIDGET — NÃO REMOVER (mesma razão acima)
-      console.log('__RADIO_PLAYING__:false');
+      (window as any).__radioPlaying = false;
     });
   }, [audio]);
 
