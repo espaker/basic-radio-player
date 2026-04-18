@@ -7,48 +7,34 @@ import './App.css';
 import { MutedOutlined, PauseCircleOutlined, PlayCircleOutlined, SoundOutlined } from '@ant-design/icons';
 import { calculateBarData, draw } from './utils';
 
-// interface configProps {
-//   radios: {label: string, value: string}[];
-//   volume: number;
-//   curURL: string;
-//   muted: boolean;
-// }
-
 function App() {
-  // const [config, setConfig] = useState<configProps>({
-  //   radios: radios,
-  //   volume: 100,
-  //   curURL: radios[0].value,
-  //   muted: false
-  // });
   const [curURL, setCurURL] = useState(localStorage.getItem('lastRadio') || radios[0].value);
   const [volume, setVolume] = useState(parseInt(localStorage.getItem('volume') || '100') || 100);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(!volume);
   const [analyser, setAnalyser] = useState<AnalyserNode>();
-  // const [context, setContext] = useState<AudioContext>();
-  // const [audioSource, setAudioSource] = useState<MediaElementAudioSourceNode>();
-  const audio = useMemo(() => new Audio(), []);  
+
+  const audio = useMemo(() => new Audio(), []);
   const playerRef = useRef<HTMLAudioElement>(audio);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  
-  const play = useCallback(() => {
-    playerRef.current?.play();
-  }, []);
+
+  // FIX: refs para guardar o contexto e o source node entre re-renders
+  // sem re-criar em cada evento 'play' — isso quebrava no Chromium
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const analyserNodeRef = useRef<AnalyserNode | null>(null);
 
   const updateSrc = useCallback((url: string) => {
-    // console.log('updateSrc', url);
     playerRef.current.src = url;
-    playerRef.current?.load();
-    playerRef.current?.play();
+    playerRef.current.load();
+    playerRef.current.play();
   }, []);
 
   const handlePlayPause = useCallback(() => {
     if (playing) playerRef.current?.pause();
     else playerRef.current?.play();
-  }, [playing]);  
+  }, [playing]);
 
   const handleMute = useCallback(() => {
     setMuted(prev => !prev);
@@ -57,7 +43,7 @@ function App() {
   useEffect(() => {
     localStorage.setItem('lastRadio', curURL);
     updateSrc(curURL);
-  }, [curURL, updateSrc, play]);
+  }, [curURL, updateSrc]);
 
   useEffect(() => {
     localStorage.setItem('volume', volume.toString());
@@ -72,37 +58,47 @@ function App() {
     audio.crossOrigin = 'anonymous';
     audio.addEventListener('loadstart', () => setLoading(true));
     audio.addEventListener('loadeddata', () => setLoading(false));
+
     audio.addEventListener('play', () => {
-      const ctx = new AudioContext();
-      const analyserNode = ctx.createAnalyser();
-      setAnalyser(analyserNode);
+      // FIX: só cria o AudioContext e o MediaElementAudioSourceNode uma vez.
+      // O Chromium lança erro se você chamar createMediaElementSource() mais de
+      // uma vez no mesmo HTMLMediaElement — o Firefox aceita, por isso o bug
+      // só aparecia em browsers Chromium-based.
+      if (!audioCtxRef.current) {
+        const ctx = new AudioContext();
+        const analyserNode = ctx.createAnalyser();
 
-      analyserNode.fftSize = 1024;
-      analyserNode.minDecibels = -90;
-      analyserNode.maxDecibels = -10;
-      analyserNode.smoothingTimeConstant = 0.4;
+        analyserNode.fftSize = 1024;
+        analyserNode.minDecibels = -90;
+        analyserNode.maxDecibels = -10;
+        analyserNode.smoothingTimeConstant = 0.4;
 
-      const source = ctx.createMediaElementSource(audio);
+        const source = ctx.createMediaElementSource(audio);
+        source.connect(analyserNode).connect(ctx.destination);
 
-      source
-        .connect(analyserNode)
-        .connect(ctx.destination)
-        
-      // setContext(ctx);
-      // setAudioSource(source);
-      setPlaying(true)
+        audioCtxRef.current = ctx;
+        sourceNodeRef.current = source;
+        analyserNodeRef.current = analyserNode;
+
+        setAnalyser(analyserNode);
+      }
+
+      // Garante que o contexto não está suspenso (política de autoplay dos browsers)
+      if (audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume();
+      }
+
+      setPlaying(true);
     });
+
     audio.addEventListener('pause', () => setPlaying(false));
-
   }, [audio]);
-
 
   const report = useCallback(() => {
     if (!analyser) return;
 
-    const data = new Uint8Array(analyser?.frequencyBinCount);
-
-    analyser?.getByteFrequencyData(data);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
     processFrequencyData(data);
     requestAnimationFrame(report);
   }, [analyser]);
@@ -110,77 +106,59 @@ function App() {
   const processFrequencyData = (data: Uint8Array): void => {
     if (!canvasRef.current) return;
 
-    const dataPoints = calculateBarData(
-      data,
-      canvasRef.current.width,
-      5,
-      1
-    );
-    draw(
-      dataPoints,
-      canvasRef.current,
-      5,
-      1,
-      'transparent',
-      "rgb(160, 198, 255)"
-    );
+    const dataPoints = calculateBarData(data, canvasRef.current.width, 5, 1);
+    draw(dataPoints, canvasRef.current, 5, 1, 'transparent', 'rgb(160, 198, 255)');
   };
-
 
   useEffect(() => {
     if (!analyser) return;
-
     report();
   }, [analyser, report]);
 
   return (
-    <Layout >
-      <Card 
+    <Layout>
+      <Card
         title={
           <Flex justify='center'>
             <Typography.Title level={4}>Simple Radio Player</Typography.Title>
           </Flex>
-        } 
-        style={{minWidth: '100vw', minHeight: '100vh'}}
+        }
+        style={{ minWidth: '100vw', minHeight: '100vh' }}
       >
         <Flex vertical className='flexbody'>
           <Flex justify='center'>
-          <canvas ref={canvasRef} width="1000%" height="65%" style={{ position: 'absolute', zIndex: 1, aspectRatio: "unset" }} />
-            <Button 
-              icon={(playing) ? <PauseCircleOutlined style={{ fontSize: '400%' }} /> : <PlayCircleOutlined style={{ fontSize: '400%'}} />} 
-              onClick={handlePlayPause} 
+            <canvas ref={canvasRef} width="1000%" height="65%" style={{ position: 'absolute', zIndex: 1, aspectRatio: 'unset' }} />
+            <Button
+              icon={playing ? <PauseCircleOutlined style={{ fontSize: '400%' }} /> : <PlayCircleOutlined style={{ fontSize: '400%' }} />}
+              onClick={handlePlayPause}
               danger={playing}
-              loading={loading} 
+              loading={loading}
               shape='circle'
               type='text'
               size='large'
-              style={{
-                minHeight: '70px', 
-                minWidth: '70px',
-                position: 'relative', zIndex: 2
-              }}
+              style={{ minHeight: '70px', minWidth: '70px', position: 'relative', zIndex: 2 }}
             />
           </Flex>
           <Flex gap={5} justify='center'>
-            <Button 
+            <Button
               icon={volume && !muted ? <SoundOutlined /> : <MutedOutlined />}
-              onClick={handleMute} 
+              onClick={handleMute}
               danger={muted}
             />
-            <Slider 
-              style={{width: '70vw'}} 
-              min={0} max={100}  
-              value={volume} 
-              onChange={setVolume} 
+            <Slider
+              style={{ width: '70vw' }}
+              min={0} max={100}
+              value={volume}
+              onChange={setVolume}
             />
           </Flex>
           <Flex vertical>
             <Menu
-                onClick={({key}) => setCurURL(key)}
-                mode='inline' 
-                selectedKeys={[curURL]}
-                items={radios.map((radio) => ({label: radio.label, key: radio.value}))}
-                style={{overflowY: 'auto', maxHeight: '70vh'}}
+              onClick={({ key }) => setCurURL(key)}
+              mode='inline'
+              selectedKeys={[curURL]}
+              items={radios.map((radio) => ({ label: radio.label, key: radio.value }))}
+              style={{ overflowY: 'auto', maxHeight: '70vh' }}
             />
           </Flex>
         </Flex>

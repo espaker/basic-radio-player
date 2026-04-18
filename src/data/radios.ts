@@ -5,11 +5,11 @@ export const radios = [
     },
     {
       label: 'Classic Vinyl HD',
-      value: 'https://icecast1.walmradio.com:8443/classic',
+      value: 'https://icecast1.walmradio.com:8443/classic_opus',
     },
     {
       label: 'Old Time Radio',
-      value: 'https://icecast1.walmradio.com:8443/otr_opus',
+      value: 'https://icecast2.walmradio.com:8443/otr_opus',
     },
     {
       label: 'Galegóviski',
@@ -21,7 +21,7 @@ export const radios = [
     },
     {
       label: 'Adroit Jazz Underground',
-      value: 'https://icecast1.walmradio.com:8443/jazz',
+      value: 'https://icecast2.walmradio.com:8443/jazz_opus',
     },
     {
       label: 'Christmas Vinyl HD',
