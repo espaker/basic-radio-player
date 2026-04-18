@@ -1,10 +1,37 @@
 .flexbody {
     width: 100% !important;
     height: 100% !important;
-    /* border: 3px solid green; */
 }
 
 body {
     margin: 0;
     padding: 0;
+}
+
+/* Fix: area vazia do scroll do Menu herda o fundo do tema */
+.ant-menu-root {
+    background: var(--ant-color-bg-container) !important;
+}
+
+.ant-menu-root li {
+    background: var(--ant-color-bg-container);
+}
+
+/* Custom scrollbar to match Ant Design theme */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ant-color-text-quaternary, rgba(255, 255, 255, 0.15));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--ant-color-text-tertiary, rgba(255, 255, 255, 0.3));
 }
