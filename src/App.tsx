@@ -229,10 +229,68 @@ function App() {
       }
 
       setPlaying(true);
+      // ⚠️ PLASMA WIDGET — NÃO REMOVER
+      // O QML lê mensagens do console via onJavaScriptConsoleMessage (WebEngineView).
+      // O prefixo "__RADIO_PLAYING__:" é o contrato entre o JS e o QML para
+      // atualizar a cor/ícone do widget no painel do Plasma 6.
+      console.log('__RADIO_PLAYING__:true');
     });
 
-    audio.addEventListener('pause', () => setPlaying(false));
+    audio.addEventListener('pause', () => {
+      setPlaying(false);
+      // ⚠️ PLASMA WIDGET — NÃO REMOVER (mesma razão acima)
+      console.log('__RADIO_PLAYING__:false');
+    });
   }, [audio]);
+
+  // ── Atalhos de teclado, scroll e plasma-middle-click ─────────────────────
+  // ⚠️ PLASMA WIDGET — NÃO REMOVER
+  // Este bloco é a ponte de controle entre o widget Plasma 6 e o player.
+  // O app roda dentro de um WebEngineView (Qt QML) e não tem janela própria,
+  // então controles nativos de mídia (MediaSession, teclas de mídia) não chegam.
+  // O QML despacha eventos sintéticos no window para suprir isso:
+  //   - 'keydown' ArrowUp/Down: enviado pelo QML ao scrollar no ícone do painel
+  //   - 'keydown' Space: atalho de teclado para play/pause
+  //   - 'wheel': scroll no WebEngineView para controle de volume
+  //   - 'plasma-middle-click': CustomEvent disparado via runJavaScript()
+  //     quando o usuário clica com o botão do meio no ícone do painel
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Ignora quando o foco está num campo de texto (busca, select, etc.)
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
+
+      if (e.key === 'ArrowUp') {
+        setVolume(v => Math.min(100, v + 5));
+      } else if (e.key === 'ArrowDown') {
+        setVolume(v => Math.max(0, v - 5));
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        if (playerRef.current.paused) playerRef.current.play().catch(() => {});
+        else playerRef.current.pause();
+      }
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      setVolume(v => e.deltaY < 0 ? Math.min(100, v + 5) : Math.max(0, v - 5));
+    };
+
+    // Disparado pelo QML: page.runJavaScript("window.dispatchEvent(new CustomEvent('plasma-middle-click'))")
+    const onMiddleClick = () => {
+      if (playerRef.current.paused) playerRef.current.play().catch(() => {});
+      else playerRef.current.pause();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('plasma-middle-click', onMiddleClick);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('plasma-middle-click', onMiddleClick);
+    };
+  }, []);
 
   // ── Visualizador ─────────────────────────────────────────────────────────
   const report = useCallback(() => {
