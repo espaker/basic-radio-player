@@ -257,7 +257,7 @@ function App() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <Layout>
+    <Layout style={{ height: '100vh', overflow: 'hidden' }}>
       <Card
         title={
           <Flex justify='center'>
@@ -266,7 +266,8 @@ function App() {
             </Typography.Title>
           </Flex>
         }
-        style={{ minWidth: '100vw', minHeight: '100vh' }}
+        style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        styles={{ body: { flex: 1, overflow: 'hidden', padding: '12px 24px' } }}
       >
         <Flex vertical className='flexbody' gap={12}>
 
