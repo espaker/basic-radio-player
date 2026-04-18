@@ -5,11 +5,11 @@ export const radios = [
     },
     {
       label: 'Classic Vinyl HD',
-      value: 'https://icecast.walmradio.com:8443/classic',
+      value: 'https://icecast1.walmradio.com:8443/classic',
     },
     {
       label: 'Old Time Radio',
-      value: 'https://icecast.walmradio.com:8443/otr_opus',
+      value: 'https://icecast1.walmradio.com:8443/otr_opus',
     },
     {
       label: 'Galegóviski',
@@ -21,11 +21,11 @@ export const radios = [
     },
     {
       label: 'Adroit Jazz Underground',
-      value: 'https://icecast.walmradio.com:8443/jazz',
+      value: 'https://icecast1.walmradio.com:8443/jazz',
     },
     {
       label: 'Christmas Vinyl HD',
-      value: 'https://icecast.walmradio.com:8443/christmas',
+      value: 'https://icecast1.walmradio.com:8443/christmas',
     },
     {
       label: '101.ru Anime',
@@ -34,10 +34,6 @@ export const radios = [
     {
       label: 'Jazz Radio Blues',
       value: 'http://jazzblues.ice.infomaniak.ch/jazzblues-high.mp3',
-    },
-    {
-      label: 'Rockabilly-radio.net',
-      value: 'http://lin3.ash.fast-serv.com:6026/stream_96',
     },
     {
       label: 'Magia FM',
